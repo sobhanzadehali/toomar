@@ -2,10 +2,19 @@ from datetime import datetime
 
 from toomar.conf import Config
 
+DEBUG = "DEBUG"
+INFO = "INFO"
+WARNING = "WARNING"
+ERROR = "ERROR"
+CRITICAL = "CRITICAL"
+
+LEVELS: tuple[str, ...] = (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+
 
 class Log:
-    def __init__(self, message: str):
+    def __init__(self, message: str, level: str = INFO):
         self.message: str = message
+        self.level: str = level
         self.created_date = datetime.now()  # noqa: DTZ005
 
     def __str__(self):

@@ -1,10 +1,13 @@
-from dataclasses import dataclass
+from __future__ import annotations
 
-from toomar.sinks import BaseSink
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from toomar.sinks import BaseSink
 
 
 @dataclass
 class Config:
     sinks: list[BaseSink]
-    format:str|None
-
+    format: str | None
