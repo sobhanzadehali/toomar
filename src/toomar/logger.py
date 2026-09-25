@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from toomar.conf import Config
+
 
 class Log:
     def __init__(self, message: str):
@@ -14,6 +16,9 @@ class Logger:
     """
     the interface  that user works with to log data
     """
+    def __init__(self, conf:Config):
+        self.conf = conf
+
     def info(self, *args):
         pass
 

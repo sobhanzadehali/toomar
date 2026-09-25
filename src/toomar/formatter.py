@@ -17,5 +17,15 @@ class LogFormatter:
 class DateTimeFormatter:
 
     @staticmethod
-    def format(dt:datetime, fstr:str):
-        pass
+    def is_valid_format(fstr: str) -> bool:
+        try:
+            datetime(2000, 2, 2).strftime(fstr)
+            return True
+        except ValueError:
+            return False
+
+    @staticmethod
+    def format(dt: datetime, fstr: str) -> str:
+        if not DateTimeFormatter.is_valid_format(fstr):
+            raise ValueError(f"Invalid format string: {fstr!r}")
+        return dt.strftime(fstr)
