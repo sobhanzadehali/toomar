@@ -1,0 +1,8 @@
+version = 1
+revision = 3
+requires-python = ">=3.10"
+
+[[package]]
+name = "toomar"
+version = "0.2.0.dev1"
+source = { editable = "." }

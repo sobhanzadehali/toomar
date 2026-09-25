@@ -163,13 +163,6 @@ For a stable headline, run the median-of-N variant:
 ```bash
 BENCH_RUNS=7 BENCH_ITERS=500000 PYTHONPATH=src python3 bench_stable.py
 ```
-
-### Regenerate the chart
-
-```bash
-python3 make_chart.py        # writes docs/bench_chart.png
-```
-
 ---
 
 ## License

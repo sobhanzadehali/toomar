@@ -1,0 +1,14 @@
+[project]
+name = "toomar"
+version = "0.2.0.dev1"
+description = "Fast, dependency free, python logger"
+readme = "README.md"
+authors = [
+    { name = "sobhanzadehali", email = "" }
+]
+requires-python = ">=3.10"
+dependencies = []
+
+[build-system]
+requires = ["uv_build>=0.12.6,<0.13.0"]
+build-backend = "uv_build"
