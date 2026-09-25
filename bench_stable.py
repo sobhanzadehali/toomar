@@ -14,7 +14,7 @@ import time
 from toomar.conf import Config
 from toomar.logger import get_logger as get_toomar_logger
 from toomar.logger import shutdown as toomar_shutdown
-from toomar.sinks import ConsoleSink
+from toomar.sinks import BufferSink
 
 RUNS = int(os.environ.get("BENCH_RUNS", "7"))
 ITERATIONS = int(os.environ.get("BENCH_ITERS", "500_000"))
@@ -22,9 +22,8 @@ MESSAGE = "hello world 42"
 
 
 def _make_toomar_logger():
-    buf = io.StringIO()
     cfg = Config(
-        sinks=[ConsoleSink(stream=buf, colors=False, autoflush=False)],
+        sinks=[BufferSink(colors=False)],
         format=None,
     )
     return get_toomar_logger("bench", config=cfg)
@@ -81,7 +80,7 @@ def main() -> None:
 
     print(f"toomar  latency: {t_lat * 1e6:6.2f} µs/log   throughput: {t_thr:,.0f} logs/sec")
     print(f"stdlib  latency: {s_lat * 1e6:6.2f} µs/log   throughput: {s_thr:,.0f} logs/sec")
-    print(f"speedup: {s_lat / t_lat:.2f}x faster  ({s_thr / t_thr:.2f}x throughput)")
+    print(f"speedup: {s_lat / t_lat:.2f}x faster  ({t_thr / s_thr:.2f}x throughput)")
 
 
 if __name__ == "__main__":

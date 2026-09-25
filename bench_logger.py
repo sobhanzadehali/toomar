@@ -21,7 +21,6 @@ from __future__ import annotations
 import io
 import logging
 import os
-import sys
 import time
 
 from rich.console import Console
@@ -32,7 +31,7 @@ from rich.text import Text
 from toomar.conf import Config
 from toomar.logger import get_logger as get_toomar_logger
 from toomar.logger import shutdown as toomar_shutdown
-from toomar.sinks import ConsoleSink
+from toomar.sinks import BufferSink
 
 # ---------------------------------------------------------------------------
 # helpers
@@ -46,9 +45,8 @@ MESSAGE = "hello world 42"
 
 
 def _make_toomar_logger():
-    buf = io.StringIO()
     cfg = Config(
-        sinks=[ConsoleSink(stream=buf, colors=False, autoflush=False)],
+        sinks=[BufferSink(colors=False)],
         format=None,
     )
     return get_toomar_logger("bench", config=cfg)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import atexit
 import sys
 import threading
 from datetime import datetime
@@ -46,6 +47,9 @@ class Log:
 
 
 def _get_worker(config: Config) -> _LogWorker:
+    # Known limitation: the worker is a process wide singleton created from the
+    # first Config that reaches this point, so a later Config with different
+    # sinks is ignored. Build the config you want before the first get_logger().
     global _worker
     with _worker_lock:
         if _worker is None:
@@ -72,11 +76,25 @@ def get_logger(name: str = "", config: Config | None = None) -> Logger:
 
 
 def shutdown() -> None:
+    """drain the worker, close every sink, and release the worker singleton.
+
+    idempotent, and registered as an :mod:`atexit` hook at import time, so
+    buffered logs reach their sinks and open files are closed even when the
+    program ends without calling this explicitly. logging after shutdown is a
+    silent no-op.
+    """
     global _worker
     with _worker_lock:
         if _worker is not None:
-            _worker.stop()
+            worker = _worker
             _worker = None
+            worker.stop()
+            worker.close()
+
+
+# drain and close on normal interpreter exit, including sys.exit() and
+# unhandled exceptions in main()
+atexit.register(shutdown)
 
 
 class _LogWorker:
@@ -110,7 +128,11 @@ class _LogWorker:
 
     def _run(self) -> None:
         batch: list[Log] = []
-        while self._running:
+        # the sentinel, not ``_running``, ends the loop: ``stop()`` clears
+        # _running first so producers stop enqueueing, but records already in
+        # the queue must still reach their sinks.
+        running = True
+        while running:
             try:
                 item = self._queue.get(timeout=0.1)
             except Empty:
@@ -120,6 +142,8 @@ class _LogWorker:
                 continue
 
             if item is None:
+                # the sentinel can overtake logs still queued behind it
+                self._drain(batch)
                 break
 
             batch.append(item)
@@ -130,12 +154,36 @@ class _LogWorker:
         if batch:
             self._flush_batch(batch)
 
+    def _drain(self, batch: list[Log]) -> None:
+        """move everything still queued into ``batch``; the caller flushes it."""
+        while True:
+            try:
+                item = self._queue.get_nowait()
+            except Empty:
+                return
+            if item is not None:
+                batch.append(item)
+
     def _flush_batch(self, batch: list[Log]) -> None:
         for sink in self._sinks:
             try:
                 sink.flush(batch)
             except Exception as e:
                 print(f"[toomar] sink {sink.__class__.__name__} failed: {e}", file=sys.stderr)
+
+    def close(self) -> None:
+        """release sink resources. failures warn on stderr, never propagate."""
+        for sink in self._sinks:
+            close = getattr(sink, "close", None)
+            if close is None:
+                continue
+            try:
+                close()
+            except Exception as e:
+                print(
+                    f"[toomar] closing sink {sink.__class__.__name__} failed: {e}",
+                    file=sys.stderr,
+                )
 
 
 class Logger:
